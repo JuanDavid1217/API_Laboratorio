@@ -282,43 +282,40 @@ def get_all_requests(db:Session):
   requests = db.query(models.Request).all()
   return requests
 
-def save_request(db:Session, request: schemas.NewRequest):
+def save_request(db:Session, request: schemas.NewPatient):
   try:
-    patient_id = None
-    if not isinstance(request.patient, int):
-      new_patient = models.Patient(email = request.patient.patient.email,
-                                  phone_number = request.patient.patient.phone_number,
-                                  type_id= request.patient.patient.type_id)
+    patient_id = request.patient_id
+    if patient_id is None:
+      new_patient = models.Patient(email = request.email,
+                                  phone_number = request.phone_number,
+                                  type_id= request.type_id)
       db.add(new_patient)
       db.flush()
-    
-      new_animal_human = None 
-      if isinstance(request.patient, schemas.NewAnimal):
+
+      new_animal_human = None
+
+      if not request.animal is None:
         new_animal_human = models.Animal(patient_id = new_patient.id,
-                                         name = request.patient.name,
-                                         requested_by = request.patient.requested_by,
-                                         specie = request.patient.specie)
-        db.add(new_animal_human)
-        db.flush()
+                                         name = request.animal.name,
+                                         requested_by = request.animal.requested_by,
+                                         specie = request.animal.specie)
       else:
         new_animal_human = models.Human(patient_id = new_patient.id,
-                                        name = request.patient.name,
-                                        last_name = request.patient.last_name,
-                                        maternal_surname = request.patient.maternal_surname,
-                                        age = request.patient.age,
-                                        gender_id = request.patient.gender_id)
-        db.add(new_animal_human)
-        db.flush()
+                                        name = request.human.name,
+                                        last_name = request.human.last_name,
+                                        maternal_surname = request.human.maternal_surname,
+                                        age = request.human.age,
+                                        gender_id = request.human.gender_id)
+      db.add(new_animal_human)
+      db.flush()
       patient_id = new_animal_human.patient_id
-    else:
-      patient_id = request.patient
-
-    details = request.details
+      
+    details = request.requests.details
 
     new_request = models.Request(patient_id = patient_id,
-                                 date = request.date,
-                                 total = request.total,
-                                 paid = request.paid)
+                                 date = request.requests.date,
+                                 total = request.requests.total,
+                                 paid = request.requests.paid)
     db.add(new_request)
     db.flush()
 
@@ -329,20 +326,58 @@ def save_request(db:Session, request: schemas.NewRequest):
                                         done= detail.done)
       db.add(new_detail)
       db.flush()
-    
     db.commit()
-    db.refresh(new_request)
-    return new_request
+    return db.query(models.Patient).filter(models.Patient.id == patient_id).first()
   except Exception as e:
     print(e)
     db.rollback()
     raise e
 
-def save_results(db: Session, result = schemas.NewResult):
+def save_results(db: Session, result: schemas.NewResult):
   try:
     new_result = models.Result(detail_id = result.detail_id, result = result.result)
+    bd.add(new_result)
+    db.flush()
+    detail = db.query(models.RequestDetail).filter(models.RequestDetail.id == result.detail_id).first()
+    detail.done = 1
+    db.commit()
+    db.refresh(detail)
+    db.refresh(new_result)
     return new_result
   except Exception as e:
     print(e)
     db.rollback()
     raise e
+
+def update_result(db: Session, detail_id: int, new_result: schemas.ResultBase):
+  try:
+    result = db.query(models.Result).filter(models.Result.detail_id == detail_id).first()
+    if result is None:
+      return None
+    result.result = new_result.result
+    db.commit()
+    db.refresh(result)
+    return result
+  except Exception as e:
+    print(e)
+    raise e
+
+def delete_result(db: Session, detail_id: int):
+  try:
+    result = db.query(models.Result).filter(models.Result.detail_id == detail_id).first()
+    if result is None:
+      return None
+    db.delete(result)
+    db.flush()
+    detail = db.query(models.RequestDetail).filter(models.RequestDetail.id == detail_id).first()
+    detail.done = 0
+    db.commit()
+    db.refresh(detail)
+    return True
+  except Exception as e:
+    print(e)
+    raise e
+
+def get_patients(db: Session):
+  data = db.query(models.Patient).all()
+  return data

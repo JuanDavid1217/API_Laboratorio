@@ -56,8 +56,8 @@ class Patient(Base):
   type_id = Column(Integer, ForeignKey("patient_types.id"), nullable = False)
   
   patient_type = relationship("PatientType", back_populates="patients")
-  animals = relationship("Animal", back_populates="patient")
-  humans = relationship("Human", back_populates = "patient")
+  animal = relationship("Animal", back_populates="patient", uselist=False)
+  human = relationship("Human", back_populates = "patient", uselist=False)
   requests = relationship("Request", back_populates = "patient")
 
 class Animal(Base):
@@ -67,7 +67,7 @@ class Animal(Base):
   requested_by = Column(String(255), nullable = False)
   specie = Column(String(255), nullable = False)
 
-  patient = relationship("Patient", back_populates="animals")
+  patient = relationship("Patient", back_populates="animal")
 
 class Human(Base):
   __tablename__ = "humans"
@@ -78,7 +78,7 @@ class Human(Base):
   age = Column(Integer, nullable = False)
   gender_id = Column(Integer, ForeignKey("genders.id"), nullable = False)
 
-  patient = relationship("Patient", back_populates = "humans")
+  patient = relationship("Patient", back_populates = "human")
   gender = relationship("Gender", back_populates = "humans")
 
 class Request(Base):

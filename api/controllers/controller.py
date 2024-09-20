@@ -218,14 +218,44 @@ def delete_patient_type(type_id: int, db: Session = Depends(get_db)):
     global_exception_handler(e)
 
 
-@router.get("/requests", response_model = List[schemas.Request])
+@router.get("/requests", response_model = List[schemas.Request2])
 def get_all_requests(db: Session = Depends(get_db)):
   return crud.get_all_requests(db)
 
-@router.post("/requests", response_model = schemas.Request)
-def save_request(new_request: schemas.NewRequest, db: Session = Depends(get_db)):
+@router.post("/requests", response_model = schemas.Patient)
+def save_request(new_request: schemas.NewPatient, db: Session = Depends(get_db)):
   try:
     request = crud.save_request(db, new_request)
     return request
   except Exception as e:
     global_exception_handler(e)
+
+@router.post("/results", response_model = schemas.Result)
+def save_results(new_result: schemas.NewResult, db: Session = Depends(get_db)):
+  try:
+    result = crud.save_results(db, new_result)
+    return result
+  except Exception as e:
+    global_exception_handler(e)
+
+@router.put("/results/{detail_id}", response_model = schemas.Result)
+def update_result(detail_id: int, result: schemas.NewResult, db: Session = Depends(get_db)):
+  try:
+    result_updated = crud.update_result(db, detail_id, result)
+    if result_updated is None:
+      raise HTTPException(status_code = 404, detail = 'Resultado no encontrado.')
+    return result_updated
+  except Exception as e:
+    global_exception_handler(e)
+
+@router.delete("/results/{detail_id}")
+def delete_result(detail_id: int, db: Session = Depends(get_db)):
+  try:
+    if crud.delete_result(db, detail_id) is None:
+      raise HTTPException(status_code = 404, detail = 'Resultado no encontrado.')
+  except Exception as e:
+    global_exception_handler(e)
+
+@router.get("/patients", response_model=list[schemas.Patient2])
+def get_patients(db:Session = Depends(get_db)):
+  return crud.get_patients(db)

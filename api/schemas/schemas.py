@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union
+from typing import Union, Optional
 
 class NewSample(BaseModel):
   description:str
@@ -33,13 +33,20 @@ class User(UserBase):
   class Config:
     from_attributes = True
 
-
-class NewAnalysis(BaseModel):
+class AnalysisBase(BaseModel):
   identifier: str
-  price: float
   data: str
 
+class NewAnalysis(AnalysisBase):
+  price: float
+
 class Analysis(NewAnalysis):
+  id: int
+
+  class Config:
+    from_attributes = True
+
+class AnalysisByDetail(AnalysisBase):
   id: int
 
   class Config:
@@ -76,32 +83,14 @@ class PatientType(NewPatientType):
     from_attributes = True
 
 
-class PatientBase(BaseModel):
-  email: str
-  phone_number: str
-
-class NewPatient(PatientBase):
-  type_id: int
-
-class Patient(PatientBase):
-  patient_type: PatientType
-
-  class Config:
-    from_attributes = True
-
-
-class AnimalBase(BaseModel):
+class NewAnimal(BaseModel):
   name: str
   requested_by: str
   specie: str
 
-class NewAnimal(AnimalBase):
-  patient: NewPatient
-
-class Animal(AnimalBase):
+class Animal(NewAnimal):
   patient_id: int
-  patient: Patient
-
+  
   class Config:
     from_attributes = True
 
@@ -113,17 +102,32 @@ class HumanBase(BaseModel):
   age: int
 
 class NewHuman(HumanBase):
-  patient: NewPatient
   gender_id:int
 
 class Human(HumanBase):
   patient_id: int
-  patient: Patient
   gender: Gender
 
   class Config:
     from_attributes = True
 
+class ResultBase(BaseModel):
+  result: str
+
+class NewResult(ResultBase):
+  detail_id: int
+
+class Result(NewResult):
+  id: int
+
+  class Config:
+    from_attributes = True
+
+class ResultByDetail(ResultBase):
+  id: int
+
+  class Config:
+    from_attributes = True
 
 class DetailBase(BaseModel):
   price: float
@@ -134,7 +138,8 @@ class NewDetail(DetailBase):
 
 class Detail(DetailBase):
   id: int
-  analysis: Analysis
+  analysis: AnalysisByDetail
+  result: ResultByDetail | None
 
   class Config:
     from_attributes = True
@@ -145,30 +150,49 @@ class RequestBase(BaseModel):
   paid: int = 0
 
 class NewRequest(RequestBase):
-  patient: Union[NewAnimal, NewHuman]
-  details: list[NewDetail] = []
-
-class NewRequestByPreviousPatient(RequestBase):
-  patient_id: int
   details: list[NewDetail] = []
 
 class Request(RequestBase):
   id: int
-  patient: Patient
   details: list[Detail] = []
 
   class Config:
     from_attributes = True
 
+class Request2(RequestBase):
+  id: int
+  patient_id: int
+  details: list[Detail] = []
 
-class ResultBase(BaseModel):
-  result: str
+  class Config:
+    from_attributes = True
 
-class NewResult(ResultBase):
-  detail_id: int
+class PatientBase(BaseModel):
+  email: str | None = None
+  phone_number: str | None = None
 
-class Result(RequestBase):
-  detailt: Detail
+class NewPatient(PatientBase):
+  type_id: int | None = None
+  patient_id: int | None = None
+  animal: NewAnimal | None = None
+  human: NewHuman | None = None
+  requests: NewRequest
+
+class Patient(PatientBase):
+  id: int
+  patient_type: PatientType
+  animal: Animal | None
+  human: Human | None
+  requests: list[Request] = []
+
+  class Config:
+    from_attributes = True
+
+class Patient2(PatientBase):
+  id: int
+  patient_type: PatientType
+  animal: Animal | None
+  human: Human | None
 
   class Config:
     from_attributes = True
