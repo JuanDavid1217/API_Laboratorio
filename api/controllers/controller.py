@@ -230,6 +230,24 @@ def save_request(new_request: schemas.NewPatient, db: Session = Depends(get_db))
   except Exception as e:
     global_exception_handler(e)
 
+@router.post("/requests/details", response_model = schemas.Detail)
+def add_detail(request_id: int, new_detail: schemas.NewDetail, db: Session = Depends(get_db)):
+  try:
+    detail = crud.add_detail(db, request_id, new_detail)
+    if detail is None:
+      raise HTTPException(status_code=404, detail= 'Solicitud de Análisis no encontrada.')
+    return detail
+  except Exception as e:
+    global_exception_handler(e)
+
+@router.delete("/requests/details/{request_id}/{analysis_id}")
+def delete_detail(request_id: int, analysis_id: int, db: Session = Depends(get_db)):
+  try:
+    if crud.delete_detail(db, request_id, analysis_id) is None:
+      raise HTTPException(status_code=404, detail='El análisis no se encuuentra registrado en la solicitud.')
+  except Exception as e:
+    global_exception_handler(e)
+
 @router.post("/results", response_model = schemas.Result)
 def save_results(new_result: schemas.NewResult, db: Session = Depends(get_db)):
   try:
@@ -259,3 +277,13 @@ def delete_result(detail_id: int, db: Session = Depends(get_db)):
 @router.get("/patients", response_model=list[schemas.Patient2])
 def get_patients(db:Session = Depends(get_db)):
   return crud.get_patients(db)
+
+@router.put("/patients", response_model = schemas.Patient2)
+def update_patient(patient_id: int, new_patient: schemas.UpdatePatient, db: Session=Depends(get_db)):
+  try:
+    patient = crud.update_patient(db, patient_id, new_patient)
+    if patient is None:
+      raise HTTPException(status_code=404, detail='Paciente no encontrado.')
+    return patient
+  except Exception as e:
+    global_exception_handler(e)

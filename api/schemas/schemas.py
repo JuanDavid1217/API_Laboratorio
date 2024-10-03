@@ -138,6 +138,7 @@ class NewDetail(DetailBase):
 
 class Detail(DetailBase):
   id: int
+  request_id: int
   analysis: AnalysisByDetail
   result: ResultByDetail | None
 
@@ -171,28 +172,26 @@ class PatientBase(BaseModel):
   email: str | None = None
   phone_number: str | None = None
 
-class NewPatient(PatientBase):
+class UpdatePatient(PatientBase):
   type_id: int | None = None
-  patient_id: int | None = None
   animal: NewAnimal | None = None
   human: NewHuman | None = None
+
+class NewPatient(UpdatePatient):
+  patient_id: int | None = None
   requests: NewRequest
-
-class Patient(PatientBase):
-  id: int
-  patient_type: PatientType
-  animal: Animal | None
-  human: Human | None
-  requests: list[Request] = []
-
-  class Config:
-    from_attributes = True
 
 class Patient2(PatientBase):
   id: int
   patient_type: PatientType
   animal: Animal | None
   human: Human | None
+
+  class Config:
+    from_attributes = True
+
+class Patient(PatientBase):
+  requests: list[Request] = []
 
   class Config:
     from_attributes = True

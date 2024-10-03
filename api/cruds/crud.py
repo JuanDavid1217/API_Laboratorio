@@ -294,7 +294,7 @@ def save_request(db:Session, request: schemas.NewPatient):
 
       new_animal_human = None
 
-      if not request.animal is None:
+      if request.animal is not None:
         new_animal_human = models.Animal(patient_id = new_patient.id,
                                          name = request.animal.name,
                                          requested_by = request.animal.requested_by,
@@ -331,6 +331,36 @@ def save_request(db:Session, request: schemas.NewPatient):
   except Exception as e:
     print(e)
     db.rollback()
+    raise e
+
+def add_detail(db:Session, request_id: int, new_detail: schemas.NewDetail):
+  try:
+    request = db.query(models.Request).filter(models.Request.id == request_id).first()
+    if request is None:
+      return None
+    detail = models.RequestDetail(request_id = request_id,
+                                  analisys_id = new_detail.analisys_id,
+                                  price = new_detail.price,
+                                  done = new_detail.done)
+    db.add(detail)
+    db.commit()
+    db.refresh(detail)
+    return detail
+  except Exception as e:
+    print(e)
+    db.rollback()
+    raise e
+
+def delete_detail(db:Session, request_id: int, analysis_id: int):
+  try:
+    detail = db.query(models.RequestDetail).filter(models.RequestDetail.request_id == request_id).filter(models.RequestDetail.analysis_id == analysis_id).first()
+    if detail is None:
+      return None
+    db.delete(detail)
+    db.commit()
+    return True
+  except Exception as e:
+    print(e)
     raise e
 
 def save_results(db: Session, result: schemas.NewResult):
@@ -381,3 +411,30 @@ def delete_result(db: Session, detail_id: int):
 def get_patients(db: Session):
   data = db.query(models.Patient).all()
   return data
+
+def update_patient(db:Session, patient_id: int, new_patient: schemas.UpdatePatient):
+  try:
+    patient = db.query(models.Patient).filter(models.Patient.id == patient_id).first()
+    if patient is None:
+      return None
+    patient.email = new_patient.email
+    patient.phone_number = new_patient.phone_number
+    if patient.type_id == 1:
+      patientType = patient.animal
+      patientType.name = new_patient.animal.name
+      patientType.requested_by = new_patient.animal.requested_by
+      patientType.specie = new_patient.animal.specie
+    else:
+      patientType = patient.human
+      patientType.name = new_patient.human.name
+      patientType.last_name = new_patient.human.last_name
+      patientType.maternal_surname = new_patient.human.maternal_surname
+      patient_type.age = new_patient.human.age
+      patientType.gender_id = new_patient.human.gender_id
+    patient.type_id = new_patient.type_id
+    db.commit()
+    db.refresh(patient)
+    return patient
+  except Exception as e:
+    print(e)
+    raise e
