@@ -19,7 +19,18 @@ class User(Base): #Only login
   id = Column(Integer, primary_key = True, autoincrement = True)
   user_name = Column(String(255), nullable = False, unique = True)
   password = Column(String(255), nullable = False)
-
+  
+  token= relationship("Token", back_populates="user", uselist=False)
+  
+class Token(Base):
+  __tablename__ = "tokens"
+  id = Column(Integer, primary_key = True, autoincrement = True)
+  user_id = Column(Integer, ForeignKey("users.id"), nullable = False)
+  token = Column(String(255), nullable = False, unique = True)
+  creation_date = Column(String(255), nullable = False)
+  
+  user= relationship("User", back_populates="token", uselist=False)
+  
 class Analysis(Base): #Crud already
   __tablename__ = "analysis"
   id = Column(Integer, primary_key = True, autoincrement = True)

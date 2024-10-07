@@ -148,11 +148,11 @@ def get_methods(db:Session):
 
 #### ANALISYS FUNCTIONS ####
 
-def save_analisys(db: Session, analysis: schemas.NewAnalysis):
+def save_analisys(db: Session, analisys: schemas.NewAnalysis):
   try:
     new_analisys = models.Analysis(identifier = analisys.identifier,
                                    price = analisys.price,
-                                   data = analysis.data)
+                                   data = analisys.data)
     db.add(new_analisys)
     db.commit()
     db.refresh(new_analisys)
