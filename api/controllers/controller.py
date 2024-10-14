@@ -31,6 +31,23 @@ def create_account(new_user: schemas.NewUser, db: Session = Depends(get_db)):
   except Exception as e:
     global_exception_handler(e)
 
+@router.post("/account/forgotPassword")
+def is_register(user: schemas.UserBase, db: Session = Depends(get_db)):
+  return crud.is_register(db, user.user_name)
+
+@router.post("/account/checkToken")
+def check_token(token: schemas.TokenBase, db: Session = Depends(get_db)):
+  is_valid = crud.check_token(db, token)
+  if is_valid is None or is_valid is False:
+    raise HTTPException(status_code=401, detail='Token inválido.')
+  return is_valid
+
+@router.post("/account/changePassword")
+def change_password(new_password: schemas.ChangePassword, db: Session = Depends(get_db)):
+  changed = crud.change_password(db, new_password)
+  if changed is None:
+    raise HTTPException(status_code=409, detail = 'Usuario no encontrado.')
+  return changed
 
 @router.get("/samples", response_model = List[schemas.Sample])
 def get_samples(db: Session = Depends(get_db)):

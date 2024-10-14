@@ -33,6 +33,14 @@ class User(UserBase):
   class Config:
     from_attributes = True
 
+class TokenBase(BaseModel):
+  token: str
+  user_id: int
+
+class ChangePassword(BaseModel):
+  user_id: int
+  password: str
+
 class AnalysisBase(BaseModel):
   identifier: str
   data: str

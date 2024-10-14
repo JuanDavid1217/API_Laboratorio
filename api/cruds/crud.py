@@ -1,6 +1,13 @@
+import sys
+import os
 from sqlalchemy.orm import Session
+#from sqlalchemy  import func #func.lower()
 from models import models
 from schemas import schemas
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),'..', 'services')))
+from security_service import generate_token, token_validation
+from email_service import send_token
+from datetime import datetime
 
 #### LOGIN FUNCTIONS ####
 
@@ -19,6 +26,40 @@ def create_account(db: Session, user: schemas.NewUser):
 def login(db: Session, user: schemas.NewUser):
   exists = db.query(models.User).filter(models.User.user_name == user.user_name).filter(models.User.password == user.password).first()
   return exists
+
+def is_register(db: Session, email:str):
+  exists = db.query(models.User).filter(models.User.user_name == email).first()
+  if exists is None:
+    return 0
+  tokens = db.query(models.Token).all()
+  tokens = [token.token for token in tokens]
+  new_token = generate_token(tokens)
+  sended = send_token(email, new_token)
+  if sended == 0:
+    return -1
+  token = exists.token
+  if token is None:
+    token = models.Token(user_id=exists.id, token=new_token, creation_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    db.add(token)
+  else:
+    token.token = new_token
+    token.creation_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  db.commit()
+  return exists.id
+
+def check_token(db: Session, token: schemas.TokenBase):
+  exists = db.query(models.Token).filter(models.Token.user_id == token.user_id).filter(models.Token.token == token.token).first()
+  if exists is None:
+    return None
+  return token_validation(exists.creation_date)
+
+def change_password(db: Session, new_password: schemas.ChangePassword):
+  user = db.query(models.User).filter(models.User.id == new_password.user_id).first()
+  if user is None:
+    return None
+  user.password = new_password.password
+  db.commit()
+  return True
 
 ##### SAMPLES FUNCTIONS #####
 
