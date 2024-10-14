@@ -189,38 +189,38 @@ def get_methods(db:Session):
 
 #### ANALISYS FUNCTIONS ####
 
-def save_analisys(db: Session, analisys: schemas.NewAnalysis):
+def save_analisys(db: Session, analysis: schemas.NewAnalysis):
   try:
-    new_analisys = models.Analysis(identifier = analisys.identifier,
-                                   price = analisys.price,
-                                   data = analisys.data)
-    db.add(new_analisys)
+    new_analysis = models.Analysis(identifier = analysis.identifier,
+                                   price = analysis.price,
+                                   data = analysis.data)
+    db.add(new_analysis)
     db.commit()
-    db.refresh(new_analisys)
-    return new_analisys
+    db.refresh(new_analysis)
+    return new_analysis
   except Exception as e:
     print(e)
     db.rollback()
     raise e
 
-def update_analisys(db:Session, analisys_id: int, analisys = schemas.NewMethod):
-  created_analisys = db.query(models.Analysis).filter(models.Analysis.id == analisys_id).first()
-  if created_analisys is None:
+def update_analisys(db:Session, analysis_id: int, analysis = schemas.NewMethod):
+  created_analysis = db.query(models.Analysis).filter(models.Analysis.id == analysis_id).first()
+  if created_analysis is None:
     return None
   try:
-    created_analisys.identifier = analisys.identifier
-    created_analisys.price = analisys.price
-    created_analisys.data = analisys.data
+    created_analysis.identifier = analysis.identifier
+    created_analysis.price = analysis.price
+    created_analysis.data = analysis.data
     db.commit()
-    db.refresh(created_analisys)
-    return created_analisys
+    db.refresh(created_analysis)
+    return created_analysis
   except Exception as e:
     print(e)
     raise e
 
-def delete_analisys(db:Session, analisys_id:int):
+def delete_analisys(db:Session, analysis_id:int):
   try:
-    exists = db.query(models.analisys).filter(models.Analysis.id == analisys_id).first()
+    exists = db.query(models.Analysis).filter(models.Analysis.id == analysis_id).first()
     if exists is None:
       return None
     db.delete(exists)
@@ -230,8 +230,8 @@ def delete_analisys(db:Session, analisys_id:int):
     raise e
 
 def get_analisys(db:Session):
-  analisys = db.query(models.Analysis).all()
-  return analisys
+  analysis = db.query(models.Analysis).all()
+  return analysis
 
 #### GENDER FUNCTIONS ####
 
